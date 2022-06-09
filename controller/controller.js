@@ -1,68 +1,57 @@
 const Task = require('../model/Task')
-
-const getSingleTask = async (req,res)=>{
-    try {
+const asyncWrapper = require('../middleware/asyncWrapper')
+const {createCustomerror} = require('../error/customApi')
+const getSingleTask = asyncWrapper (async (req,res,next)=>{
         const {id:taskID} = req.params
-        const task = await Task.findOne({_id:taskID})
-        if(!task){
-            return res.status(500).json({msg:`No such task with id:${taskID}`})
+        const tasks = await Task.findOne({_id:taskID})
+        if(!tasks){
+            return next(createCustomEror(`No such task with id:${taskID}`,404))
+            
         }
-        res.status(200).json({success:true,task:task})
-    } catch (error) {
-        res.status(500).json({msg:error})
-    }
+        res.status(200).json({success:true,task:tasks})
+    
+})
+
+const getAllTask = asyncWrapper( async (req,res)=>{
+    
+       const tasks =  await Task.find({})
+       res.status(200).json({success:true,tasks})
+    
 }
+)
 
-const getAllTask = async (req,res)=>{
-    try {
-       const task =  await Task.find({})
-       res.status(200).json({success:true,task})
-    } catch (error) { 
-        res.status(404).json({msg:error})
-    }
-}
-
-
-const createTask = async (req,res) =>{
-    try {
+const createTask = asyncWrapper(  async (req,res) =>{
+    
         
-        const task = await Task.create(req.body)
-        res.status(201).json({task})
-        
-    } catch (error) {
-        res.status(500).json({msg:error})    
-    }
+        const tasks = await Task.create(req.body)
+        res.status(201).json({tasks}) 
 
-}
+})
 
-const updateTask = async(req,res)=>{
-    try {
+const updateTask = asyncWrapper(  async(req,res)=>{
         const {id:taskID} = req.params
-        const task = await Task.findOneAndUpdate({_id:taskID},req.body,{
+        const tasks = await Task.findOneAndUpdate({_id:taskID},req.body,{
             new :true, runValidators:true
         })
-        if(!task){
-            res.status(500).json({msg:`no such task`})
+        if(!tasks){
+            return next(createCustomEror(`No such task with id:${taskID}`,404))
+
         }
         res.status(200).json({success:true})
-    } catch (error) {
-        res.status(404).json({msg:error})
-    }
+  
 }
-
-const deleteTask = async (req,res)=>{
-    try {
+)
+const deleteTask = asyncWrapper(  async (req,res)=>{
         const {id:taskID} = req.params
-        const task = await Task.findOneAndDelete({_id:taskID})
-        if(!task){
-            return res.status(500).json({msg:`No such task with id:${taskID}`})
+        const tasks = await Task.findOneAndDelete({_id:taskID})
+        if(!tasks){
+           return next(createCustomEror(`No such task with id:${taskID}`,404))
+
         }
         res.status(200).json({success:true,msg:`deleted ${taskID} successfully`})
 
-    } catch (error) {
-        res.status(404).json({msg:error})
-    }
-}
+  
+})
 
 module.exports = {
     getAllTask,
